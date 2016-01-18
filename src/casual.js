@@ -1,11 +1,15 @@
-var helpers = require('./helpers'),
-    exists = require('fs').existsSync;
+var helpers = require('./helpers');
 
 var safe_require = function(filename) {
-	if (exists(filename + '.js')) {
-		return require(filename);
+	var r;
+
+	try {
+		r = require(filename);
+	} catch (e) {
+		return { }
 	}
-	return {};
+
+	return r;
 };
 
 var build_casual = function() {
@@ -42,7 +46,7 @@ var build_casual = function() {
 			providers.forEach(function(provider) {
 				casual.register_provider(helpers.extend(
 					require('./providers/' + provider),
-					safe_require(__dirname + '/providers/' + locale + '/' + provider)
+					safe_require('./providers/' + locale + '/' + provider)
 				));
 			});
 
