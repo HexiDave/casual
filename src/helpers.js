@@ -1,26 +1,26 @@
 var number = require('./providers/number');
 
-var random_element = function(array) {
+var random_element = function (array) {
 	var index = this.integer(0, array.length - 1);
 	return array[index];
 };
 
-var random_key = function(object) {
+var random_key = function (object) {
 	var keys = Object.keys(object);
 	return this.random_element(keys);
 };
 
-var random_value = function(object) {
+var random_value = function (object) {
 	return object[this.random_key(object)];
 };
 
-var register_provider = function(provider) {
+var register_provider = function (provider) {
 	for (var i in provider) {
 		this.define(i, provider[i]);
 	}
 };
 
-var extend = function(a, b) {
+var extend = function (a, b) {
 	for (var i in b) {
 		a[i] = b[i];
 	}
@@ -28,7 +28,7 @@ var extend = function(a, b) {
 	return a;
 };
 
-var define = function(name, generator) {
+var define = function (name, generator) {
 	if (typeof generator != 'function') {
 		this[name] = generator;
 		return;
@@ -37,34 +37,48 @@ var define = function(name, generator) {
 	if (generator.length) {
 		this[name] = generator.bind(this);
 	} else {
-		Object.defineProperty(this, name, { get: generator });
+		Object.defineProperty(this, name, {get: generator});
 	}
 
 	this['_' + name] = generator.bind(this);
 };
 
-var numerify = function(format) {
+var numerify = function (format) {
 	return format.replace(/#/g, this._digit);
 };
 
-var letterify = function(format) {
+var letterify = function (format) {
 	return format.replace(/X/g, this._letter);
 };
 
-var join = function() {
+var join = function () {
 	var tokens = Array.prototype.slice.apply(arguments);
 	return tokens.filter(Boolean).join(' ');
 };
 
-var populate = function(format) {
+var populate = function (format) {
 	var casual = this;
-	return format.replace(/\{\{(.+?)\}\}/g, function(match, generator) {
+	return format.replace(/\{\{(.+?)\}\}/g, function (match, generator) {
 		return casual['_' + generator]();
 	});
 };
 
-var populate_one_of = function(formats) {
+var populate_one_of = function (formats) {
 	return this.populate(this.random_element(formats));
+};
+
+var extend_provider = function (baseProviders, ownProviders) {
+	var outProviders = {};
+
+	Object.keys(baseProviders).forEach(function (providerKey) {
+		outProviders[providerKey] = baseProviders[providerKey];
+
+		if (ownProviders.hasOwnProperty(providerKey)) {
+			outProviders[providerKey] = extend(outProviders[providerKey], ownProviders[providerKey]);
+		}
+	});
+
+	return outProviders;
 };
 
 module.exports = {
@@ -75,8 +89,9 @@ module.exports = {
 	extend: extend,
 	define: define,
 	numerify: numerify,
-	letterify:letterify,
+	letterify: letterify,
 	join: join,
 	populate: populate,
-	populate_one_of: populate_one_of
+	populate_one_of: populate_one_of,
+	extend_provider: extend_provider
 };

@@ -1,17 +1,5 @@
 var helpers = require('./helpers');
 
-var safe_require = function(filename) {
-	var r;
-
-	try {
-		r = require(filename);
-	} catch (e) {
-		return { }
-	}
-
-	return r;
-};
-
 var build_casual = function() {
 	var casual = helpers.extend({}, helpers);
 
@@ -27,33 +15,6 @@ var build_casual = function() {
 		return adapter;
 	};
 
-	var providers = [
-		'address',
-		'text',
-		'internet',
-		'person',
-		'number',
-		'date',
-		'payment',
-		'misc',
-		'color'
-	];
-
-	casual.register_locale = function(locale) {
-		casual.define(locale, function() {
-			var casual = build_casual();
-
-			providers.forEach(function(provider) {
-				casual.register_provider(helpers.extend(
-					require('./providers/' + provider),
-					safe_require('./providers/' + locale + '/' + provider)
-				));
-			});
-
-			return casual;
-		});
-	}
-
 	var locales = [
 		'en_US',
 		'ru_RU',
@@ -64,7 +25,18 @@ var build_casual = function() {
 		'de_DE'
 	];
 
-	locales.forEach(casual.register_locale);
+	locales.forEach(function(locale) {
+		casual.define(locale, function() {
+			var casual = build_casual();
+
+			var localeProviders = require('./providers/' + locale + "/index");
+			Object.keys(localeProviders).forEach(function(providerKey) {
+				casual.register_provider(localeProviders[providerKey]);
+			});
+
+			return casual;
+		})
+	});
 
 	return casual;
 };
